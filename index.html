@@ -3,9 +3,21 @@
   <head>
     <script src='https://cdn.firebase.com/v0/firebase.js'></script>
     <script src="http://ajax.googleapis.com/ajax/libs/jquery/1.10.2/jquery.min.js"> </script>
+    <script src="http://d3js.org/d3.v3.min.js" charset="utf-8"></script>
+    <script type="text/javascript" src="https://www.google.com/jsapi"></script>
+
     <style>
       .dice-roll{
         width: 50px;
+      }
+
+      .chart div {
+        font: 10px sans-serif;
+        background-color: steelblue;
+        text-align: right;
+        padding: 3px;
+        margin: 1px;
+        color: white;
       }
     </style>
   </head>
@@ -27,23 +39,85 @@
 
     </div>
 
+
+    <div id="chart_div" style="width: 900px; height: 500px;"></div>
+
+
     <script>
-      var root_ref = new Firebase('https://catancount.firebaseio.com/');
-      var rolls_list = new Firebase('https://catancount.firebaseio.com/rolls');
-      // var games_ref = root_ref.child('games');
+      var allRolls = [];
+      var aggregatedRolls = [];
+      var high = 12;
+
+      //init google chart
+      google.load("visualization", "1", {packages:["corechart"]});
+      google.setOnLoadCallback(drawChart);
+
+      function numberOfOccurrences(arr, num){
+          
+        count = 0;
+
+        for (var i = 0; i < arr.length; i++){
+          if (arr[i] == num){
+            count++;
+          }
+        }
 
 
-      rolls_list.on('child_added', function(snapshot) {
+        return count;
+      }
+
+      function getAggregatedCounts(allDiceRolls, highestDiceNumber){
+        var aggregatedRolls = [['Dice Roll', 'Actual Value', 'Expected Value']];
+
+
+        for (var i = 0; i < highestDiceNumber; i++){
+          roll = i + 1;
+          actual = numberOfOccurrences(allDiceRolls, roll);
+
+          expected = actual + 1; //TODO: calculate
+          aggregatedRolls.push([roll, actual, expected]);
+        }
+
+        return aggregatedRolls;
+      }
+
+      function drawChart() {
+        agg = getAggregatedCounts(allRolls, high);
+        var data = google.visualization.arrayToDataTable(agg);
+
+        var options = {
+          title: 'Company Performance',
+          chartArea: {left: 50}
+        };
+
+        var chart = new google.visualization.ColumnChart(document.getElementById('chart_div'));
+        chart.draw(data, options);
+      }
+
+      var rootRef = new Firebase('https://catancount.firebaseio.com/');
+      var rollsList = new Firebase('https://catancount.firebaseio.com/rolls');
+
+      var startingCount = Number.MAX_VALUE;
+
+      // get starting length of the list
+      // which will be > 0 if there is data and the page is reloaded
+      rollsList.once('value', function(dataSnapshot) {
+        startingCount = dataSnapshot.numChildren();
+      });
+
+      rollsList.on('child_added', function(snapshot) {
         var msgData = snapshot.val();
         $('#output').append(msgData + " ");
-        
+        allRolls.push(msgData);
+
+        drawChart();
       });
 
 
       $('.dice-roll').click(function() {
         _this = $(this);
         val = _this.val();
-        rolls_list.push(val);
+        rollsList.push(val);
       });
 
     </script>
