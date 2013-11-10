@@ -4,26 +4,73 @@
     <script src='https://cdn.firebase.com/v0/firebase.js'></script>
     <script src="http://ajax.googleapis.com/ajax/libs/jquery/1.10.2/jquery.min.js"> </script>
     <script src="http://code.highcharts.com/highcharts.js"></script>
+
+    <link rel="stylesheet" href="bootstrap.min.css">
   </head>
   <body>
     <style>
       .dice-roll{
         width: 50px;
+        margin: 10px;
       }
-    </style>
-    <button class="dice-roll" value="2" type="button"><h3>2</h3></button>
-    <button class="dice-roll" value="3" type="button"><h3>3</h3></button>
-    <button class="dice-roll" value="4" type="button"><h3>4</h3></button>
-    <button class="dice-roll" value="5" type="button"><h3>5</h3></button>
-    <button class="dice-roll" value="6" type="button"><h3>6</h3></button>
-    <button class="dice-roll" value="7" type="button"><h3>7</h3></button>
-    <button class="dice-roll" value="8" type="button"><h3>8</h3></button>
-    <button class="dice-roll" value="9" type="button"><h3>9</h3></button>
-    <button class="dice-roll" value="10" type="button"><h3>10</h3></button>
-    <button class="dice-roll" value="11" type="button"><h3>11</h3></button>
-    <button class="dice-roll" value="12" type="button"><h3>12</h3></button>
+      .dice-roll > h3{
+        margin-top: 10px;
+      }
 
-    <div id="chart" style="width:100%; height:400px;"></div>
+    </style>
+
+<nav class="navbar navbar-default" role="navigation">
+  <!-- Brand and toggle get grouped for better mobile display -->
+  <div class="navbar-header">
+    <button type="button" class="navbar-toggle" data-toggle="collapse" data-target="#bs-example-navbar-collapse-1">
+      <span class="sr-only">Toggle navigation</span>
+      <span class="icon-bar"></span>
+      <span class="icon-bar"></span>
+      <span class="icon-bar"></span>
+    </button>
+    <a class="navbar-brand" href="#">Dice Roll Stats</a>
+  </div>
+</nav>
+
+    <div class="row">
+      <div id="chart" style="width:95%; padding-left: 10px"></div>
+    </div>
+    <div class="col-sm-11">
+      <div class="col-sm-1 col-sm-offset-1">
+        <button class="btn btn-info btn-large dice-roll" value="2" type="button"><h3>2</h3></button>
+      </div>
+      <div class="col-sm-1">
+        <button class="btn btn-info btn-large dice-roll" value="3" type="button"><h3>3</h3></button>
+      </div>
+      <div class="col-sm-1">
+        <button class="btn btn-info btn-large dice-roll" value="4" type="button"><h3>4</h3></button>
+      </div>
+      <div class="col-sm-1">
+        <button class="btn btn-info btn-large dice-roll" value="5" type="button"><h3>5</h3></button>
+      </div>
+      <div class="col-sm-1">
+        <button class="btn btn-info btn-large dice-roll" value="6" type="button"><h3>6</h3></button>
+      </div>
+      <div class="col-sm-1">
+        <button class="btn btn-info btn-large dice-roll" value="7" type="button"><h3>7</h3></button>
+      </div>
+      <div class="col-sm-1">
+        <button class="btn btn-info btn-large dice-roll" value="8" type="button"><h3>8</h3></button>
+      </div>
+      <div class="col-sm-1">
+        <button class="btn btn-info btn-large dice-roll" value="9" type="button"><h3>9</h3></button>
+      </div>
+      <div class="col-sm-1">
+        <button class="btn btn-info btn-large dice-roll" value="10" type="button"><h3>10</h3></button>      
+      </div>
+      <div class="col-sm-1">
+        <button class="btn btn-info btn-large dice-roll" value="11" type="button"><h3>11</h3></button>      
+      </div>
+      <div class="col-sm-1">
+        <button class="btn btn-info btn-large dice-roll" value="12" type="button"><h3>12</h3></button>      
+      </div>
+    </div>
+
 
     <script>
       var allRolls = [];
