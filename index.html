@@ -3,24 +3,14 @@
   <head>
     <script src='https://cdn.firebase.com/v0/firebase.js'></script>
     <script src="http://ajax.googleapis.com/ajax/libs/jquery/1.10.2/jquery.min.js"> </script>
-    <script type="text/javascript" src="https://www.google.com/jsapi"></script>
-
+    <script src="http://code.highcharts.com/highcharts.js"></script>
+  </head>
+  <body>
     <style>
       .dice-roll{
         width: 50px;
       }
-
-      .chart div {
-        font: 10px sans-serif;
-        background-color: steelblue;
-        text-align: right;
-        padding: 3px;
-        margin: 1px;
-        color: white;
-      }
     </style>
-  </head>
-  <body>
     <button class="dice-roll" value="2" type="button"><h3>2</h3></button>
     <button class="dice-roll" value="3" type="button"><h3>3</h3></button>
     <button class="dice-roll" value="4" type="button"><h3>4</h3></button>
@@ -33,25 +23,14 @@
     <button class="dice-roll" value="11" type="button"><h3>11</h3></button>
     <button class="dice-roll" value="12" type="button"><h3>12</h3></button>
 
-    <div id="output">
-
-    </div>
-
-
-    <div id="chart_div" style="width: 900px; height: 500px;"></div>
-
+    <div id="chart" style="width:100%; height:400px;"></div>
 
     <script>
       var allRolls = [];
       var aggregatedRolls = [];
       var high = 12;
 
-      //init google chart
-      google.load("visualization", "1", {packages:["corechart"]});
-      google.setOnLoadCallback(drawChart);
-
       function numberOfOccurrences(arr, num){
-          
         count = 0;
 
         for (var i = 0; i < arr.length; i++){
@@ -60,67 +39,94 @@
           }
         }
 
-
         return count;
       }
 
       function getExpectedCount(number, totalRolls){
-        // # 2.7777 #percentage for 2
-        // # 5.5555  #percentage for 3
-        // # 8.3333 #percentage for 4
-        // # 11.1111 #percentage for 5
-        // # 13.8888 #percentage for 6
-        // # 16.6666 #percentage for 7
-        // # 13.8888 #percentage for 8
-        // # 11.1111 #percentage for 9
-        // # 8.3333 #percentage for 10
-        // # 5.5555 #percentage for 11
-        // # 2.7777 #percentage for 12
         rollPercentages = [2.7777, 5.5555, 8.3333, 11.1111, 13.8888, 16.6666, 13.8888, 11.1111, 8.3333, 5.5555, 2.7777]
         for(var i = 0; i < rollPercentages.length; i++){
           rollPercentages[i] = rollPercentages[i] / 100;
         }
 
-        return (rollPercentages[number - 1] * totalRolls);
+        return Math.round((rollPercentages[number - 2] * totalRolls) * 100) / 100;
       }
 
       function getAggregatedCounts(allDiceRolls, highestDiceNumber){
-        var aggregatedRolls = [['Dice Roll', 'Actual Value', 'Expected Value']];
-
+        var actuals = [];
+        var expecteds = [];
 
         for (var i = 0; i < highestDiceNumber - 1; i++){
           roll = i + 2;
           actual = numberOfOccurrences(allDiceRolls, roll);
+          actuals.push(actual);
 
           expected = getExpectedCount(roll, allDiceRolls.length)
-          aggregatedRolls.push([roll, actual, expected]);
+          expecteds.push(expected);
         }
 
-        return aggregatedRolls;
+        return {actuals: actuals, expecteds: expecteds};
       }
 
-      function drawChart() {
+      function drawChart(hasLoaded) {
+        if (!hasLoaded){
+          return;
+        }
+
         agg = getAggregatedCounts(allRolls, high);
-        var data = google.visualization.arrayToDataTable(agg);
 
-        var options = {
-          title: 'Company Performance',
-          chartArea: {left: 50}
-        };
-
-        var chart = new google.visualization.ColumnChart(document.getElementById('chart_div'));
-        chart.draw(data, options);
+        $('#chart').highcharts({
+          chart: {
+              type: 'column'
+          },
+          title: {
+              text: 'Dice Rolls: Actual vs Expected'
+          },
+          xAxis: {
+              categories: ['2', '3', '4', '5', '6', '7', '8', '9', '10', '11', '12']
+          },
+          yAxis: {
+              title: {
+                  text: 'Rolls'
+              }
+          },
+          colors: [
+             '#2f7ed8', 
+             '#a6c96a'
+          ],
+          plotOptions: {
+              column: {
+                  dataLabels: {
+                      enabled: true
+                  },
+                  enableMouseTracking: false
+              }
+          },
+          series: [{
+              name: 'Actual',
+              data: agg.actuals,
+              backgroundColor: '#2DD62D'
+          }, {
+              name: 'Expected',
+              data: agg.expecteds
+          }]
+        });
       }
 
       var rootRef = new Firebase('https://catancount.firebaseio.com/');
       var rollsList = new Firebase('https://catancount.firebaseio.com/rolls');
+
+      var hasLoaded = false;
+      rollsList.on('value', function(snapshot) {
+        hasLoaded = true;
+        drawChart(hasLoaded);
+      });
 
       rollsList.on('child_added', function(snapshot) {
         var msgData = snapshot.val();
         $('#output').append(msgData + " ");
         allRolls.push(msgData);
 
-        drawChart();
+        drawChart(hasLoaded);
       });
 
 
