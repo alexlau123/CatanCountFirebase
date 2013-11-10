@@ -2,6 +2,8 @@
 <html>
   <head>
     <script src='https://cdn.firebase.com/v0/firebase.js'></script>
+    <script type='text/javascript'src='https://cdn.firebase.com/v0/firebase-simple-login.js'></script>
+    <script type='text/javascript'src='https://login.persona.org/include.js'></script>
     <script src="https://ajax.googleapis.com/ajax/libs/jquery/1.10.2/jquery.min.js"> </script>
     <script src="highcharts.js"></script>
 
@@ -17,6 +19,10 @@
         margin-top: 10px;
       }
 
+      .prompt{
+        padding-left: 10px;
+      }
+
     </style>
 
     <nav class="navbar navbar-default" role="navigation">
@@ -25,62 +31,122 @@
         <span class="navbar-brand" href="#">Dice Roll Stats</span>
         <ul class="nav navbar-nav">
           <li><a id="new-game" href="#">New Game</a></li>
+          <li><a id="btn-my-games" class="is-logged-in" href="#">My Games</a></li>
         </ul>
+        <div class="pull-right">
+          <ul class="nav navbar-nav">
+            <li><a id="login" href="#">Log In</a></li>
+            <li><a id="logout" class="is-logged-in" href="#">Log Out</a></li>
+            <li><h6 id="email" class="is-logged-in"></h6></li>
+          </ul>
+        </div>
       </div>
     </nav>
 
-    <div class="row">
-      <div id="chart" style="width:95%; padding-left: 10px"></div>
+    <div id="div-my-games" style="display:none;">
+      <h3 class="prompt">My games:</h3>
+      <ul id="ul-games">
+        <li>Game 1</li>
+      </ul>
     </div>
-    <h3 id="enter-prompt">Enter your dice roll:</h3>
-    <div class="col-sm-11">
-      <div class="col-sm-1 col-sm-offset-1">
-        <button class="btn btn-info btn-large dice-roll" value="2" type="button"><h3>2</h3></button>
+
+    <div id="game-panel">
+      <div class="row">
+        <div id="chart" style="width:95%; padding-left: 10px"></div>
       </div>
-      <div class="col-sm-1">
-        <button class="btn btn-info btn-large dice-roll" value="3" type="button"><h3>3</h3></button>
+      <h3 id="enter-prompt" class="prompt">Enter your dice roll:</h3>
+      <div class="col-sm-11">
+        <div class="col-sm-1 col-sm-offset-1">
+          <button class="btn btn-info btn-large dice-roll" value="2" type="button"><h3>2</h3></button>
+        </div>
+        <div class="col-sm-1">
+          <button class="btn btn-info btn-large dice-roll" value="3" type="button"><h3>3</h3></button>
+        </div>
+        <div class="col-sm-1">
+          <button class="btn btn-info btn-large dice-roll" value="4" type="button"><h3>4</h3></button>
+        </div>
+        <div class="col-sm-1">
+          <button class="btn btn-info btn-large dice-roll" value="5" type="button"><h3>5</h3></button>
+        </div>
+        <div class="col-sm-1">
+          <button class="btn btn-info btn-large dice-roll" value="6" type="button"><h3>6</h3></button>
+        </div>
+        <div class="col-sm-1">
+          <button class="btn btn-info btn-large dice-roll" value="7" type="button"><h3>7</h3></button>
+        </div>
+        <div class="col-sm-1">
+          <button class="btn btn-info btn-large dice-roll" value="8" type="button"><h3>8</h3></button>
+        </div>
+        <div class="col-sm-1">
+          <button class="btn btn-info btn-large dice-roll" value="9" type="button"><h3>9</h3></button>
+        </div>
+        <div class="col-sm-1">
+          <button class="btn btn-info btn-large dice-roll" value="10" type="button"><h3>10</h3></button>      
+        </div>
+        <div class="col-sm-1">
+          <button class="btn btn-info btn-large dice-roll" value="11" type="button"><h3>11</h3></button>      
+        </div>
+        <div class="col-sm-1">
+          <button class="btn btn-info btn-large dice-roll" value="12" type="button"><h3>12</h3></button>      
+        </div>
       </div>
-      <div class="col-sm-1">
-        <button class="btn btn-info btn-large dice-roll" value="4" type="button"><h3>4</h3></button>
-      </div>
-      <div class="col-sm-1">
-        <button class="btn btn-info btn-large dice-roll" value="5" type="button"><h3>5</h3></button>
-      </div>
-      <div class="col-sm-1">
-        <button class="btn btn-info btn-large dice-roll" value="6" type="button"><h3>6</h3></button>
-      </div>
-      <div class="col-sm-1">
-        <button class="btn btn-info btn-large dice-roll" value="7" type="button"><h3>7</h3></button>
-      </div>
-      <div class="col-sm-1">
-        <button class="btn btn-info btn-large dice-roll" value="8" type="button"><h3>8</h3></button>
-      </div>
-      <div class="col-sm-1">
-        <button class="btn btn-info btn-large dice-roll" value="9" type="button"><h3>9</h3></button>
-      </div>
-      <div class="col-sm-1">
-        <button class="btn btn-info btn-large dice-roll" value="10" type="button"><h3>10</h3></button>      
-      </div>
-      <div class="col-sm-1">
-        <button class="btn btn-info btn-large dice-roll" value="11" type="button"><h3>11</h3></button>      
-      </div>
-      <div class="col-sm-1">
-        <button class="btn btn-info btn-large dice-roll" value="12" type="button"><h3>12</h3></button>      
-      </div>
-    </div>
+    </div> <!-- end game-panel -->
 
 
     <script>
       var allRolls = [];
       var aggregatedRolls = [];
+      var allGames = [];
       var rootRef = new Firebase('https://catancount.firebaseio.com/');
-      var gameCountRef = rootRef.child('game_count');
+      var gameCountRef = rootRef.child('gameCount');
       var usersRef = rootRef.child('users');
       var gamesRef = null; //usersRef.child('games');
       var rollsRef = null; // gamesRef.child('rolls');
-      var hasLoaded = false;
-      var game_count = 1;
+      var currentUser = null;
 
+      var auth = new FirebaseSimpleLogin(rootRef, function(error, u) {
+        if(!error && u != null){
+          $('#email').html("Signed in as " + u.email);
+          $('.is-logged-in').show();
+          $('#login').hide();
+          userName = sanitizeEmail(u.email);
+          usersRef = usersRef.child(userName);
+          currentUser = userName;
+
+
+          // //pulls ALL of a user's game data, including all rolls
+          // usersRef.child('games').on('value', function(snapshot) {
+          //   if(snapshot.val() != null) {
+          //     console.log(snapshot.val());
+          //   }
+          // });
+
+         
+          usersRef.child('gamesList').on('value', function(snapshot) {
+            if(snapshot.val() != null) {
+              allGames = snapshot.val();
+            }
+          });
+
+
+
+
+          gamesRef = usersRef.child('games').child(gameCount + 1); //TODO: get latest game
+          rollsRef = gamesRef.child('rolls');
+        }
+        else{
+          $('.is-logged-in').hide();
+          $('#login').show();
+
+        }
+      });
+      var hasLoaded = false;
+      var gameCount = 1;
+
+
+      function sanitizeEmail(email){
+        return email.replace("@", "at").replace(".", "dot").replace(/[^\w+$]/gi, '');
+      }
 
       function numberOfOccurrences(arr, num){
         count = 0;
@@ -120,7 +186,6 @@
       }
 
       function drawChart(hasLoaded) {
-        console.log(allRolls);
         if (allRolls.length == 0){
           $('#enter-prompt').show();  
           $('#chart').hide();  
@@ -175,10 +240,16 @@
 
       function startNewGame(){
         allRolls = [];
-        gameCountRef.set(game_count + 1);  
-        console.log(game_count + 1);
-        gamesRef = usersRef.child('games').child(game_count + 1);
+        gameNumber = gameCount + 1
+        gameName = 'Game ' + gameNumber;
+        gameCountRef.set(gameNumber);  
+        gamesRef = usersRef.child('games').child(gameNumber);
+        // gamesRef.child('name').set(gameName)
         rollsRef = gamesRef.child('rolls');
+
+        if (userName != null){
+          usersRef.child('gamesList').child(gameNumber).child('name').set(gameName);
+        }
 
         rollsRef.on('value', function(snapshot) {
           hasLoaded = true;
@@ -187,19 +258,20 @@
 
         rollsRef.on('child_added', function(snapshot) {
           var msgData = snapshot.val();
-          $('#output').append(msgData + " ");
           allRolls.push(msgData);
         });
 
         drawChart(true);
       }
 
+
+  
+
       gameCountRef.on('value', function(snapshot) {
         if(snapshot.val() != null) {
-          game_count = snapshot.val();
+          gameCount = snapshot.val();
         }
       });
-
 
       $('.dice-roll').click(function() {
         if (allRolls.length == 0){
@@ -213,6 +285,32 @@
       $('#new-game').click(function() {
         startNewGame();
       });
+
+      $('#login').click(function(){
+        auth.login('persona');
+      });
+
+      $('#logout').click(function(){
+        auth.logout();
+        userName = null;
+      });
+
+      
+      $('#btn-my-games').click(function(){
+        $('#game-panel').hide();
+        $('#div-my-games').show();
+
+
+        $('#ul-games').html('');
+        for(key in allGames){          
+          console.log(allGames[key]);
+          $('#ul-games').append("<li>" + allGames[key].name + "</li>");
+        }
+
+
+      });
+
+
 
     </script>
   </body>
