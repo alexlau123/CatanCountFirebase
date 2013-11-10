@@ -2,8 +2,8 @@
 <html>
   <head>
     <script src='https://cdn.firebase.com/v0/firebase.js'></script>
-    <script src="http://ajax.googleapis.com/ajax/libs/jquery/1.10.2/jquery.min.js"> </script>
-    <script src="http://code.highcharts.com/highcharts.js"></script>
+    <script src="https://ajax.googleapis.com/ajax/libs/jquery/1.10.2/jquery.min.js"> </script>
+    <script src="highcharts.js"></script>
 
     <link rel="stylesheet" href="bootstrap.min.css">
   </head>
@@ -19,22 +19,20 @@
 
     </style>
 
-<nav class="navbar navbar-default" role="navigation">
-  <!-- Brand and toggle get grouped for better mobile display -->
-  <div class="navbar-header">
-    <button type="button" class="navbar-toggle" data-toggle="collapse" data-target="#bs-example-navbar-collapse-1">
-      <span class="sr-only">Toggle navigation</span>
-      <span class="icon-bar"></span>
-      <span class="icon-bar"></span>
-      <span class="icon-bar"></span>
-    </button>
-    <a class="navbar-brand" href="#">Dice Roll Stats</a>
-  </div>
-</nav>
+    <nav class="navbar navbar-default" role="navigation">
+      <!-- Brand and toggle get grouped for better mobile display -->
+      <div class="navbar-header">
+        <span class="navbar-brand" href="#">Dice Roll Stats</span>
+        <ul class="nav navbar-nav">
+          <li><a id="new-game" href="#">New Game</a></li>
+        </ul>
+      </div>
+    </nav>
 
     <div class="row">
       <div id="chart" style="width:95%; padding-left: 10px"></div>
     </div>
+    <h3 id="enter-prompt">Enter your dice roll:</h3>
     <div class="col-sm-11">
       <div class="col-sm-1 col-sm-offset-1">
         <button class="btn btn-info btn-large dice-roll" value="2" type="button"><h3>2</h3></button>
@@ -75,7 +73,14 @@
     <script>
       var allRolls = [];
       var aggregatedRolls = [];
-      var high = 12;
+      var rootRef = new Firebase('https://catancount.firebaseio.com/');
+      var gameCountRef = rootRef.child('game_count');
+      var usersRef = rootRef.child('users');
+      var gamesRef = null; //usersRef.child('games');
+      var rollsRef = null; // gamesRef.child('rolls');
+      var hasLoaded = false;
+      var game_count = 1;
+
 
       function numberOfOccurrences(arr, num){
         count = 0;
@@ -98,11 +103,11 @@
         return Math.round((rollPercentages[number - 2] * totalRolls) * 100) / 100;
       }
 
-      function getAggregatedCounts(allDiceRolls, highestDiceNumber){
+      function getAggregatedCounts(allDiceRolls){
         var actuals = [];
         var expecteds = [];
 
-        for (var i = 0; i < highestDiceNumber - 1; i++){
+        for (var i = 0; i < 11; i++){
           roll = i + 2;
           actual = numberOfOccurrences(allDiceRolls, roll);
           actuals.push(actual);
@@ -115,11 +120,20 @@
       }
 
       function drawChart(hasLoaded) {
+        console.log(allRolls);
+        if (allRolls.length == 0){
+          $('#enter-prompt').show();  
+          $('#chart').hide();  
+        } else {
+          $('#enter-prompt').hide();  
+          $('#chart').show();  
+        }
+
         if (!hasLoaded){
           return;
         }
 
-        agg = getAggregatedCounts(allRolls, high);
+        agg = getAggregatedCounts(allRolls);
 
         $('#chart').highcharts({
           chart: {
@@ -159,30 +173,45 @@
         });
       }
 
-      var rootRef = new Firebase('https://catancount.firebaseio.com/');
-      var usersRef = rootRef.child('users');
-      var gamesRef = usersRef.child('games');
-      var rollsRef = gamesRef.child('rolls');
+      function startNewGame(){
+        allRolls = [];
+        gameCountRef.set(game_count + 1);  
+        console.log(game_count + 1);
+        gamesRef = usersRef.child('games').child(game_count + 1);
+        rollsRef = gamesRef.child('rolls');
 
-      var hasLoaded = false;
-      rollsRef.on('value', function(snapshot) {
-        hasLoaded = true;
-        drawChart(hasLoaded);
-      });
+        rollsRef.on('value', function(snapshot) {
+          hasLoaded = true;
+          drawChart(hasLoaded);
+        });
 
-      rollsRef.on('child_added', function(snapshot) {
-        var msgData = snapshot.val();
-        $('#output').append(msgData + " ");
-        allRolls.push(msgData);
+        rollsRef.on('child_added', function(snapshot) {
+          var msgData = snapshot.val();
+          $('#output').append(msgData + " ");
+          allRolls.push(msgData);
+        });
 
-        drawChart(hasLoaded);
+        drawChart(true);
+      }
+
+      gameCountRef.on('value', function(snapshot) {
+        if(snapshot.val() != null) {
+          game_count = snapshot.val();
+        }
       });
 
 
       $('.dice-roll').click(function() {
+        if (allRolls.length == 0){
+          startNewGame();
+        }
         _this = $(this);
         val = _this.val();
         rollsRef.push(val);
+      });
+
+      $('#new-game').click(function() {
+        startNewGame();
       });
 
     </script>
