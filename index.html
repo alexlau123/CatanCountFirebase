@@ -3,7 +3,6 @@
   <head>
     <script src='https://cdn.firebase.com/v0/firebase.js'></script>
     <script src="http://ajax.googleapis.com/ajax/libs/jquery/1.10.2/jquery.min.js"> </script>
-    <script src="http://d3js.org/d3.v3.min.js" charset="utf-8"></script>
     <script type="text/javascript" src="https://www.google.com/jsapi"></script>
 
     <style>
@@ -22,7 +21,6 @@
     </style>
   </head>
   <body>
-    <button class="dice-roll" value="1" type="button"><h3>1</h3></button>
     <button class="dice-roll" value="2" type="button"><h3>2</h3></button>
     <button class="dice-roll" value="3" type="button"><h3>3</h3></button>
     <button class="dice-roll" value="4" type="button"><h3>4</h3></button>
@@ -90,8 +88,8 @@
         var aggregatedRolls = [['Dice Roll', 'Actual Value', 'Expected Value']];
 
 
-        for (var i = 0; i < highestDiceNumber; i++){
-          roll = i + 1;
+        for (var i = 0; i < highestDiceNumber - 1; i++){
+          roll = i + 2;
           actual = numberOfOccurrences(allDiceRolls, roll);
 
           expected = getExpectedCount(roll, allDiceRolls.length)
@@ -116,14 +114,6 @@
 
       var rootRef = new Firebase('https://catancount.firebaseio.com/');
       var rollsList = new Firebase('https://catancount.firebaseio.com/rolls');
-
-      var startingCount = Number.MAX_VALUE;
-
-      // get starting length of the list
-      // which will be > 0 if there is data and the page is reloaded
-      rollsList.once('value', function(dataSnapshot) {
-        startingCount = dataSnapshot.numChildren();
-      });
 
       rollsList.on('child_added', function(snapshot) {
         var msgData = snapshot.val();
