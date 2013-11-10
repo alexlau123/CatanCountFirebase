@@ -113,15 +113,17 @@
       }
 
       var rootRef = new Firebase('https://catancount.firebaseio.com/');
-      var rollsList = new Firebase('https://catancount.firebaseio.com/rolls');
+      var usersRef = rootRef.child('users');
+      var gamesRef = usersRef.child('games');
+      var rollsRef = gamesRef.child('rolls');
 
       var hasLoaded = false;
-      rollsList.on('value', function(snapshot) {
+      rollsRef.on('value', function(snapshot) {
         hasLoaded = true;
         drawChart(hasLoaded);
       });
 
-      rollsList.on('child_added', function(snapshot) {
+      rollsRef.on('child_added', function(snapshot) {
         var msgData = snapshot.val();
         $('#output').append(msgData + " ");
         allRolls.push(msgData);
@@ -133,7 +135,7 @@
       $('.dice-roll').click(function() {
         _this = $(this);
         val = _this.val();
-        rollsList.push(val);
+        rollsRef.push(val);
       });
 
     </script>
