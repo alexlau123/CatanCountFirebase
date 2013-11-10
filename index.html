@@ -245,11 +245,19 @@
         gameCountRef.set(gameNumber);  
         gamesRef = usersRef.child('games').child(gameNumber);
         // gamesRef.child('name').set(gameName)
-        rollsRef = gamesRef.child('rolls');
 
         if (userName != null){
           usersRef.child('gamesList').child(gameNumber).child('name').set(gameName);
         }
+
+        bindRollsRefFromGame(gamesRef)
+
+        drawChart(true);
+      }
+
+
+      function bindRollsRefFromGame(ref){
+        rollsRef = ref.child('rolls');
 
         rollsRef.on('value', function(snapshot) {
           hasLoaded = true;
@@ -260,10 +268,7 @@
           var msgData = snapshot.val();
           allRolls.push(msgData);
         });
-
-        drawChart(true);
       }
-
 
   
 
@@ -283,32 +288,46 @@
       });
 
       $('#new-game').click(function() {
-        startNewGame();
-      });
+        startNewGame()
+      })
 
       $('#login').click(function(){
-        auth.login('persona');
-      });
+        auth.login('persona')
+      })
 
       $('#logout').click(function(){
-        auth.logout();
-        userName = null;
-      });
+        auth.logout()
+        userName = null
+      })
 
       
       $('#btn-my-games').click(function(){
-        $('#game-panel').hide();
-        $('#div-my-games').show();
+        $('#game-panel').hide()
+        $('#div-my-games').show()
 
 
-        $('#ul-games').html('');
-        for(key in allGames){          
-          console.log(allGames[key]);
-          $('#ul-games').append("<li>" + allGames[key].name + "</li>");
+        $('#ul-games').html('')
+        for(key in allGames){  
+          $('#ul-games').append("<li><a href='#' class='link-to-game' data-game-number='" + key + "'>" + allGames[key].name + "</a></li>")
+          bindGameLinks()
         }
+      })
 
+      function bindGameLinks(){
+        $('.link-to-game').click(function(){
+          _this = $(this)
+          $('#div-my-games').hide()
+          
+          $('#game-panel').show()
 
-      });
+          gameNumber = _this.data('game-number')
+          gamesRef = usersRef.child('games').child(gameNumber);
+          bindRollsRefFromGame(gamesRef);
+          
+          drawChart(true);
+
+        })
+      }
 
 
 
